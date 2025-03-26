@@ -10,5 +10,8 @@ logs/
 encdec/
 Processed/
 sinD/
-data/
+
 misc/
+*.csv
+*.pt
+*.pth
