@@ -1,7 +1,7 @@
 
 <p align="center"><img width="100%" src="data/Idea2.bmp" style="clip-path: inset(30px 0px 25px 0px); object-fit: cover;"/></p>
 
-# HDAAGT #
+# HDAAGT-SinD #
 <div style="text-align: justify;">
 Heterogeneous Decision-Aware Attention Graph Transformer for Scene-Centric Trajectory Predicton (HDAAGT): A non-autoregressive, encoder-only transformer model for vehicle trajectory prediction. HDAAGT integrates lane positioning, traffic light states, and vehicle kinematics, enabling a decision-aware graph attention mechanism that models agent-agent and agent-environment interactions. Decision-Aware Attention Graph(DAAG) network models the spatiotemporal influence of all neighboring road agents with and generates the decisions token for all road agents simultaneously.
 </div>
