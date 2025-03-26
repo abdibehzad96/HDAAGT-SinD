@@ -9,7 +9,7 @@ eos: [1022,1022,1,1,1,1,1,1,1,1,1,1, 5, 5] # This is the end of the sequence for
 detection_path: 'data/Changchun/'
 lightpath: 'data/Changchun/Traffic_Lights.csv'
 ZoneBoxes_path: 'configs/Boxes.pth'
-generate_data: false #  Add class by loading the CSV file
+generate_data: true #  Add class by loading the CSV file
 Load_Model: false # It's for creating model from scratch
 Load_Model_Path: 'Processed/Bestmodel.pth' # The path of the model to be loaded
 Train: true # It's for training the model with the prepared data
@@ -41,11 +41,11 @@ pos_embedding_dim: [128, 128]
 
 NZones: 10
 NTrfL: 4
-sl: 180 # sequence length
-future: 180 # future prediction horizon
-sw: 15 # sliding window for preparation of the dataset 
+sl: 12 # sequence length
+future: 12 # future prediction horizon
+sw: 12 # sliding window for preparation of the dataset 
 Centre: [512,512] # The centre of the image
-dwn_smple: 9 # we can downsample the sequence length or future prediction by this factor
+dwn_smple: 2 # we can downsample the sequence length or future prediction by this factor
 noise_multiply: 10 
 noise_amp: 4 # pixels
 noise_probability: 0.6 # probability of the noise
