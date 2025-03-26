@@ -31,9 +31,8 @@ Then check if the `detection_path`and the `lightpath` comply with the SinD files
 First, we'll create a conda environment to hold the dependencies
 
 ```
-conda create --name hdaagt python=3.10 -y
-source activate hdaagt
-conda install --yes --file ./configs/requirements.txt
+conda env create -f requirements.yml
+
 ```
 
 ## Model Configuration
