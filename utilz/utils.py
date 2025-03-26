@@ -122,7 +122,9 @@ def read_CSV(Scene, config): # The data preprocess is a bit different from norma
             id = torch.tensor(track["track_id"])
             frame= torch.from_numpy(track["frame_id"])
             x = torch.from_numpy(track["x"])
+            x = (x + 66)*6 # As we treat the x, y coordinates as categorical variables, we need to scale them, this will increase the resolution of the coordinates
             y = torch.from_numpy(track["y"])
+            y = (y + 82)*6
             vx = torch.from_numpy(track["vx"])
             vy = torch.from_numpy(track["vy"])
             ax = torch.from_numpy(track["ax"])
@@ -145,6 +147,7 @@ def read_CSV(Scene, config): # The data preprocess is a bit different from norma
                             ll = light[last_Frame-sum(indices):last_Frame]
                             tmp_scene[fr: tot_len, order] = torch.stack([x[indices],y[indices],vx[indices],vy[indices],yaw_rad[indices],ax[indices],ay[indices],a_lon[indices],a_lat[indices],
                                                                     v_lon[indices],v_lat[indices],heading_rad[indices],ll[:,0], ll[:,1]], dim=1)
+                            
                             order +=1
                             break
         tmp_adj_mat[:,:order, :order] = torch.eye(order, order, device=device).unsqueeze(0).repeat(config['sl']//config['dwn_smple'], 1, 1)
@@ -534,6 +537,14 @@ def pol2cart(th, r):
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
+def Find_topk_selected_words (Pred_target, Target): # This function is used to find the top k selected words from the predicted target, only for sinD dataset as we have *6 resolution increase
+    Word_Probs = Pred_target.softmax(dim=-1)
+    top_values, top_indices = torch.topk(Word_Probs, k = 5, dim=-1)
+    Topk_Selected_words = (top_indices*top_values).sum(-1)/top_values.sum(-1)
+    flg = Target[:,:,:,:1] != 0 # We have blank rows in the data as the number of present agents changes during time
+    ADE = torch.sqrt(torch.pow((Topk_Selected_words*flg -Target),2).sum(-1)).mean()/6
+    FDE = torch.sqrt(torch.pow((Topk_Selected_words*flg -Target),2).sum(-1)[:,-1]).mean()/6 # This 6 is the resolution increase that we did in the data
+    return Topk_Selected_words, ADE, FDE
 
 if __name__ == "__main__":
     print("Yohoooo, Ran a Wrong Script!")

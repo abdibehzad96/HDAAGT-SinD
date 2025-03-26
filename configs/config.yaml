@@ -4,8 +4,8 @@
 model_name: "HDAAGT"
 sind_city: 'Changchun'
 verbal: false # If true, it will print the configs parameters
-sos: [104,88,0,0,0,0,0,0,0,0,0,0, 4, 4] # This is the start of the sequence for categorical variables
-eos: [103,87,1,1,1,1,1,1,1,1,1,1, 5, 5] # This is the end of the sequence for categorical variables
+sos: [1020,1020,0,0,0,0,0,0,0,0,0,0, 4, 4] # This is the start of the sequence for categorical variables
+eos: [1022,1022,1,1,1,1,1,1,1,1,1,1, 5, 5] # This is the end of the sequence for categorical variables
 detection_path: 'data/Changchun/'
 lightpath: 'data/Changchun/Traffic_Lights.csv'
 ZoneBoxes_path: 'configs/Boxes.pth'
@@ -29,14 +29,15 @@ output_dict_size: 1024
 
 
 # Dataset parameters
-Headers: ['Frame', 'ID', 'BBx', 'BBy','W', 'L' , 'Cls','Tr1', 'Tr2', 'Tr3', 'Tr4', 'Zone', 'Xreal', 'Yreal']
+# Header: ['BBX','BBY','VX', 'VY' , 'Yaw', 'AX', 'AY', 'ALon', 'ALat', 'VLon', 'VLat', 'Heading', 'LightX', 'LightY']
 Columns_to_keep: [0,1,2,3,4,5,6,7,8,9,10,11,12,13] #['Zone','BBx', 'BBy','Tr1', 'Tr2', 'Tr3', 'Tr4']
-trf_embedding_dict_size: [12, 9, 9, 9, 9] # size of the embedding dictionary for ['Zone','BBx', 'BBy','Tr1', 'Tr2', 'Tr3', 'Tr4']
-trf_embedding_dim: [32, 24, 24, 24, 24] # size of the model dimension for ['Zone','BBx', 'BBy','Tr1', 'Tr2', 'Tr3', 'Tr4']
+xy_indx: [0,1] # the index of x and y  of the Columns_to_Keep used for speed calculation function
+Traffic_indx: [12,13] # the index of the traffic light of the Columns_to_Keep used for speed calculation function
+trf_embedding_dict_size: [6,6] # size of the embedding dictionary for ['Zone','BBx', 'BBy','Tr1', 'Tr2', 'Tr3', 'Tr4']
+trf_embedding_dim: [16, 16] # size of the model dimension for ['Zone','BBx', 'BBy','Tr1', 'Tr2', 'Tr3', 'Tr4']
 pos_embedding_dict_size: [1024, 1024]
 pos_embedding_dim: [128, 128]
-xy_indx: [1, 2] # the index of x and y  of the Columns_to_Keep used for speed calculation function
-Traffic_indx: [0, 3, 4, 5, 6] # the index of the traffic light of the Columns_to_Keep used for speed calculation function
+
 
 NZones: 10
 NTrfL: 4
