@@ -68,7 +68,6 @@ The expected output dimension of the model is **[B, SL, N, xy]**, where:
 - **xy**: Predicted x and y coordinates. 
 
 The image below illustrates the historical trajectories of road agents (represented as lines), along with their actual final positions (shown as circles) and predicted final positions (depicted as rectangles) after 3 seconds.
-<p align="center"><img width="50%" src="data/Prediction.jpg" style="object-fit: cover;  background-color: white; margin: auto;"/></p>
 
 The best-trained model can be found in the [Pickled/best_trained_model.pth](./Pickled/best_trained_model.pth) directory.
 
