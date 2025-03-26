@@ -1,5 +1,4 @@
 import torch
-from torch import nn
 from utilz.utils import *
 from models.modules import *
 

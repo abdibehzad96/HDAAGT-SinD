@@ -1,12 +1,10 @@
 Pickled/
-models/
 RawData/
 TGB/
 pytorch_geometric_temporal/
 brokentraj.csv
 dataset.pt
 minGPT/
-logs/
 encdec/
 Processed/
 sinD/
@@ -14,4 +12,4 @@ sinD/
 misc/
 *.csv
 *.pt
-*.pth
+*.txt

@@ -1,13 +1,8 @@
 # This file will generate dataset for Scene centric models
-from torch.utils.data import Dataset, DataLoader
-import csv
-import datetime
+from torch.utils.data import Dataset
 import os
 import torch
 import pandas as pd
-import yaml
-import re
-from shapely.geometry import Point, Polygon
 import numpy as np
 
 
@@ -110,8 +105,13 @@ def read_CSV(Scene, config): # The data preprocess is a bit different from norma
     print("Max frame",max_frame, "Min frame", min_frame)
 
     _, light = read_light(config['lightpath'], max_frame)
-    Boundaries = torch.load(config['ZoneBoxes_path'],weights_only=True)
-    Boundaries = torch.tensor(Boundaries).cpu()
+    # check if Boundaries exist, if not create them
+    if not os.path.exists(config['ZoneBoxes_path']):
+        # read_boundaries(config['ZoneBoxes_path'])
+        print("No boundaries found, At this point it's not important :)) ")
+    else:
+        Boundaries = torch.load(config['ZoneBoxes_path'],weights_only=True)
+        Boundaries = torch.tensor(Boundaries).cpu()
     for Frme in range(min_frame,max_frame, config['sw']):
         tmp_scene = torch.zeros(tot_len, config['Nusers'],config['NFeatures'] , device = device)
         tmp_adj_mat = torch.zeros(config['sl']//config['dwn_smple'], config['Nusers'], config['Nusers'], device = device)
@@ -140,8 +140,8 @@ def read_CSV(Scene, config): # The data preprocess is a bit different from norma
                     real_frame = fr+Frme
                     if real_frame in frame and id not in global_list:
                         indices = (frame >= real_frame) * (frame < last_Frame)
-                        st_indx = torch.where(frame == real_frame)
-                        end_indx = torch.where(frame == last_Frame)
+                        # st_indx = torch.where(frame == real_frame)
+                        # end_indx = torch.where(frame == last_Frame)
                         if order < config['Nusers']:
                             global_list[id] = order
                             ll = light[last_Frame-sum(indices):last_Frame]
@@ -162,32 +162,7 @@ def loadcsv(frmpath, Header, trjpath = None):
     if trjpath is not None:
         trj = pd.read_csv(trjpath, dtype =float)
         return df, trj
-    # with open(csvpath, 'r',newline='') as file:
-    #     for line in file:
-    #         row = line.strip().split(',')
-    #         # rowf = [float(element) for element in row]
-    #         # rowf = [0 if math.isnan(x) else x for x in rowf]
-    #         df.append(row)
     return df
-
-
-def savecsvresult(pred , groundx, groundy):
-    cwd = os.getcwd()
-    ct = datetime.datetime.now().strftime(r"%m%dT%H%M")
-    csvpath = os.path.join(cwd,'Processed',f'Predicteddata{ct}.csv')
-    with open(csvpath, 'w',newline='') as file:
-        writer = csv.writer(file)
-        for i in range(len(groundx)):
-            rowx = pred[i,:,0].tolist()
-            rowy = pred[i,:,1].tolist()
-            grx = groundx[i,:,0].tolist()
-            gry = groundx[i,:,1].tolist()
-            grxx = groundy[i,:,0].tolist()
-            gryy = groundy[i,:,1].tolist()
-            writer.writerow([rowx,grxx,grx])
-            writer.writerow([rowy,gryy,gry])
-
-
 
 
 def savelog(log, ct): # append the log to the existing log file while keeping the old logs
@@ -199,85 +174,8 @@ def savelog(log, ct): # append the log to the existing log file while keeping th
         file.write('\n' + log)
         file.close()
 
-def Zoneconf(path = '/home/abdikhab/New_Idea_Traj_Pred/utilz/ZoneConf.yaml'):
-    ZoneConf = []
-    with open(path) as file:
-        ZonesYML = yaml.load(file, Loader=yaml.FullLoader)
-        #convert the string values to float
-        for _, v in ZonesYML.items():
-            lst = []
-            for _, p  in v.items():    
-                for x in p[0]:
-                    b = re.split(r'[,()]',p[0][x])
-                    lst.append((float(b[1]), float(b[2])))
-            ZoneConf.append(lst)
-    return ZoneConf
 
-def zonefinder(BB, Zones):
-    B, Nnodes,_ = BB.size()
-    BB = BB.reshape(-1,2).cpu()
-    PredZone = torch.zeros(B*Nnodes, device=BB.device)
-    for n , bb in enumerate(BB.int()):
-        for i, zone in enumerate(Zones):
-            Poly = Polygon(zone)
-            if Poly.contains(Point(bb[0], bb[1])):
-                PredZone[n] = i+1
-                break
-        
-    
-    return PredZone.reshape(B, Nnodes)
-
-def read_zones(self, path= 'utilz/ZoneConf.yaml'):
-    ZoneConf = []
-    with open(path) as file:
-        ZonesYML = yaml.load(file, Loader=yaml.FullLoader)
-        #convert the string values to float
-        for _, v in ZonesYML.items():
-            lst = []
-            for _, p  in v.items():    
-                for x in p[0]:
-                    b = re.split(r'[,()]',p[0][x])
-                    lst.append((float(b[1]), float(b[2])))
-            ZoneConf.append(lst)
-    return ZoneConf
-    
-def Zone_compare(Pred, Target, PrevZone, BB):
-    # possiblemoves = torch.tensor([0,2,5,7,8],[0,1,2,7,8],[2],[0,2,3,5,8],[0,2,4,5,7], [5],[0,5,6,7,8],[7],[8])
-    singlezones = torch.tensor([3,6,8,9], device=Pred.device)
-    neighbours = torch.tensor([[0],[1],[6],[7],[8],[9],[2],[3],[4],[5]], device=Pred.device)
-    B, Nnodes = Pred.size()
-    Pred = Pred.reshape(-1)
-    Target = Target.reshape(-1).cpu()
-    PrevZone = PrevZone.reshape(-1).cpu()
-    totallen = B*Nnodes
-    count = 0
-    nonzero = 0
-    doublezone = 0
-    for i in range(B*Nnodes):
-        if Target[i] != 0:
-            nonzero += 1
-            if Pred[i] == Target[i]:
-                    count += 1
-            else:
-                if PrevZone[i] in singlezones:
-                    totallen -= 1
-                    # print("Single Zone")
-                if Pred[i]== neighbours[Target[i].int()]:
-                    doublezone += 1
-                
-    return count, totallen, B*Nnodes, nonzero, doublezone
-
-def occupancyMap(scene, Nnodes, Boundaries):
-    occmap = torch.zeros(Nnodes, device=scene.device)
-    for n, BB in enumerate(scene.cpu()):
-        for i, bound in enumerate(Boundaries):
-            Poly = Polygon(bound)
-            if Poly.contains(Point(BB[0], BB[1])):
-                occmap[n] = i+1
-                break
-    return occmap
-
-def fast_occmap(scene, Nnodes):
+def fast_occmap(scene, Nnodes): # This has not been used in the code, but it is a fast way to create the occupancy map as in the original SinD dataset there is no information about that
     occmap = torch.zeros(Nnodes,3, device=scene.device) # Zero is reserved for no zone
     for n, BB in enumerate(scene):
         x = BB[0]
@@ -299,7 +197,7 @@ def fast_occmap(scene, Nnodes):
     return occmap
 
 
-def inv_occmap():
+def inv_occmap(): # inverse occupancy map, this is used to convert the occupancy map to x,y values for the SinD dataset
     boxes = {}
     boxes[0] = [(0, 0), (0, 0), (0, 0), (0, 0)]
     n = 1
@@ -320,7 +218,9 @@ def inv_occmap():
     return boxes
 
 
-def read_boundaries():
+def read_boundaries(path): 
+    # if you could not find the boundaries, this function will create the boundaries for the scene, 
+    # I didn't check this part of the code after (x+66)*6 changes, so it probably won't work
     boxes = []
     train_loader = torch.load(os.path.join('Pickled', 'Train', 'Changchuntrain.pth'))
     max_x = 0
@@ -339,11 +239,11 @@ def read_boundaries():
     
     print("Max X", max_x, "Min X", min_x, "Max Y", max_y, "Min Y", min_y)
     Boundaries = [[(min_x, max_x), (min_y, max_y)]]
-    torch.save (Boundaries, os.path.join('Pickled', 'Boundaries.pth'))
+    torch.save (Boundaries, path)
     for i in torch.arange(min_x, max_x, 1):
         for j in torch.arange(min_y, max_y, 1):
             boxes.append([(i, j), (i+1, j), (i+1, j+1), (i, j+1)])
-    torch.save (boxes, os.path.join('Pickled', 'Boxes.pth'))
+    torch.save (boxes, path)
     print("len boxes", len(boxes))
 
 
@@ -361,8 +261,7 @@ def create_src_mask(src, device="cuda:3"):
     return mask
 
 
-def read_tracks_all(path):
-
+def read_tracks_all(path): # from SinD code
     Veh_path = os.path.join(path, 'Veh_smoothed_tracks.csv')
     Ped_path = os.path.join(path, 'Ped_smoothed_tracks.csv')
     veh_df = pd.read_csv(Veh_path)
@@ -411,7 +310,7 @@ def read_tracks_all(path):
 
 
 
-def read_light(path, maxframe):
+def read_light(path, maxframe): # from SinD code
 
     df_light = pd.read_csv(path)
     light_tensor = torch.zeros(maxframe+101, 2)
@@ -438,7 +337,7 @@ def read_light(path, maxframe):
     return light_dict, light_tensor
 
 
-def read_tracks_meta(path):
+def read_tracks_meta(path): # from SinD code
 
     tracks_meta_df = pd.read_csv(path, index_col="trackId")
 
@@ -447,8 +346,8 @@ def read_tracks_meta(path):
     return tracks_meta_dict
 
 
-
-def calculate_rot_bboxes_and_triangle(center_points_x, center_points_y, length=0.5, width=0.5, rotation=0):
+ 
+def calculate_rot_bboxes_and_triangle(center_points_x, center_points_y, length=0.5, width=0.5, rotation=0): # from SinD code
     """
     Calculate bounding box vertices and triangle vertices from centroid, width and length.
 
@@ -502,7 +401,7 @@ def calculate_rot_bboxes_and_triangle(center_points_x, center_points_y, length=0
     return rotated_bbox_vertices, triangle_array
 
 
-def cart2pol(cart):
+def cart2pol(cart): # from SinD code
     """
     Transform cartesian to polar coordinates.
     :param cart: Nx2 ndarray
@@ -519,7 +418,7 @@ def cart2pol(cart):
     return th, r
 
 
-def pol2cart(th, r):
+def pol2cart(th, r): # from SinD code
     """
     Transform polar to cartesian coordinates.
     :param th: Nx1 ndarray
