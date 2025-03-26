@@ -52,10 +52,10 @@ In the [configs/config.yaml](./configs/config.yaml) directory, you will find all
 
 ## Model Training/Testing
 
-After configuring the settings in the configuration file, you can run the model either by executing the `main.py` file directly or by running the following command in the terminal:
+After configuring the settings in the configuration file, you can run the model either by executing the `SindMain.py` file directly or by running the following command in the terminal:
 
 ```
-python main.py --config <path to config.yaml>
+python SindMain.py --config <path to config.yaml>
 ```
 For both training and testing, the **Train** and **Test** values in the configuration file must be set. If both are enabled, testing will be performed at the end of the training session. Additionally, you can evaluate the model's performance on the test data during training by setting **Test_during_training** to `true`.
 
